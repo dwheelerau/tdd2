@@ -14,6 +14,11 @@ class NewVisitorTest(unittest.TestCase):
         time.sleep(3)
         self.browser.quit()
 
+    def check_for_row_in_list_table(self, row_text):
+        table = self.browser.find_element_by_id('id_list_table')
+        rows = table.find_elements_by_tag_name('tr')
+        self.assertIn(row_text, [row.text for row in rows])
+
     def test_can_start_a_list_and_retrieve_it_latter(self):
         # Edith has head about a cool online to-do app she checks it out
         self.browser.get('http://localhost:8000')
@@ -36,11 +41,8 @@ class NewVisitorTest(unittest.TestCase):
         # When she hits enter the page updates and now th epage lists
         # 1: Buy peacock feathers as an item on the todo list.
         inputbox.send_keys(Keys.ENTER)
+        self.check_for_row_in_list_table('1: Buy peacock feathers')
 
-        table = self.browser.find_element_by_id('id_list_table')
-        rows = table.find_elements_by_tag_name('tr')
-        self.assertIn('1: Buy peacock feathers',
-                      [row.text for row in rows])
         # There is still a text box inviting her to add another item
         # She enter "use peacock feathers to make a fly"
         inputbox = self.browser.find_element_by_id('id_new_item')
@@ -48,14 +50,10 @@ class NewVisitorTest(unittest.TestCase):
         inputbox.send_keys(Keys.ENTER)
 
         # The page updates again and shows both items.
-        table = self.browser.find_element_by_id('id_list_table')
-        rows = table.find_elements_by_tag_name('tr')
-        self.assertIn('1: Buy peacock feathers',
-                      [row.text for row in rows])
-        self.assertIn(
-            '2: Use peacock feathers to make a fly',
-            [row.text for row in rows]
-        )
+        self.check_for_row_in_list_table('1: Buy peacock feathers')
+        self.check_for_row_in_list_table(
+            '2: Use peacock feathers to make a fly')
+
         # Edith wonders if the site will remember her list. She sees
         # It has generated a unique url for her
         # There is some explanation text that describes this.
