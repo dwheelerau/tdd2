@@ -1,10 +1,10 @@
+from django.test import LiveServerTestCase
 from selenium import webdriver
-import unittest
 import time
 from selenium.webdriver.common.keys import Keys
 
 
-class NewVisitorTest(unittest.TestCase):
+class NewVisitorTest(LiveServerTestCase):
 
     def setUp(self):
         self.browser = webdriver.Firefox()
@@ -21,7 +21,7 @@ class NewVisitorTest(unittest.TestCase):
 
     def test_can_start_a_list_and_retrieve_it_latter(self):
         # Edith has head about a cool online to-do app she checks it out
-        self.browser.get('http://localhost:8000')
+        self.browser.get(self.live_server_url)
 
         # She notices the page title and header mention to-do lists.
         assert 'To-Do' in self.browser.title
@@ -41,6 +41,8 @@ class NewVisitorTest(unittest.TestCase):
         # When she hits enter the page updates and now th epage lists
         # 1: Buy peacock feathers as an item on the todo list.
         inputbox.send_keys(Keys.ENTER)
+        edith_list_url = self.browser.current_url
+        self.assertRegex(edith_list_url, '/lists/.+')
         self.check_for_row_in_list_table('1: Buy peacock feathers')
 
         # There is still a text box inviting her to add another item
@@ -54,13 +56,32 @@ class NewVisitorTest(unittest.TestCase):
         self.check_for_row_in_list_table(
             '2: Use peacock feathers to make a fly')
 
-        # Edith wonders if the site will remember her list. She sees
-        # It has generated a unique url for her
-        # There is some explanation text that describes this.
-        self.fail('finish the tests!')
-        # She visits this url and her list is there.
+        # Now a new user comes along, francis
 
-        # Satisfied she goes back to sleep.
+        # # We use a a new browswer session to make sure no info crosses
+        # # between the users.
+        self.browser.quit()
+        self.browser = webdriver.Firefox()
 
-if __name__ == '__main__':
-    unittest.main(warnings='ignore')
+        # Francis visits the home page. THere is not sign of ediths lists.
+        self.browser.get(self.live_server_url)
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feathers', page_text)
+        self.assertNotIn('make a fly', page_text)
+
+        # fancis starts a new list by entering a new item
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        inputbox.send_keys('Buy milk')
+        inputbox.send_keys(Keys.ENTER)
+
+        # Francis gets his own uq url
+        francis_list_url = self.browser.current_url
+        self.assertRegex(francis_list_url, '/lists/.+')
+        self.assertNotEqual(francis_list_url, edith_list_url)
+
+        # again there is no trace of eiths list
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feathers', page_text)
+        self.assertIn('Buy milk', page_text)
+
+        # satisfied they both go back to sleep
