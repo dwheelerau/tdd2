@@ -1,10 +1,10 @@
-from django.test import LiveServerTestCase
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium import webdriver
 import time
 from selenium.webdriver.common.keys import Keys
 
 
-class NewVisitorTest(LiveServerTestCase):
+class NewVisitorTest(StaticLiveServerTestCase):
 
     def setUp(self):
         self.browser = webdriver.Firefox()
@@ -86,7 +86,6 @@ class NewVisitorTest(LiveServerTestCase):
 
         # satisfied they both go back to sleep
 
-
     def test_layout_and_styling(self):
         # Edith geos to the home page
         self.browser.get(self.live_server_url)
@@ -103,6 +102,3 @@ class NewVisitorTest(LiveServerTestCase):
         self.assertAlmostEqual(
             inputbox.location['x'] + inputbox.size['width'] / 2,
             512, delta=5)
-
-
-
